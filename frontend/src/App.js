@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
-import Analytics from './pages/Analytics';
+import Analytics from './components/analytics/EnhancedAnalytics';
 import Search from './pages/Search';
 import Geographic from './pages/Geographic';
 import Pipeline from './pages/Pipeline';

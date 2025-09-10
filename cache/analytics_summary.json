@@ -7,11 +7,11 @@
     "ale_beers": 6870,
     "other_beers": 1215,
     "lager_beers": 323,
-    "last_updated": "2025-09-10T20:47:16.341776",
+    "last_updated": "2025-09-10T21:57:18.121377",
     "data_source": "bigquery_beer_data",
     "load_time_ms": 10
   },
-  "cached_at": "2025-09-10T20:47:16.341809",
+  "cached_at": "2025-09-10T21:57:18.121418",
   "cache_key": "analytics_summary",
   "ttl_seconds": 3600
 }

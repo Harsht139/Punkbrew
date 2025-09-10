@@ -68,7 +68,10 @@ const Dashboard = () => {
   }
 
   return (
-    <Container fluid>
+    <Container fluid className="px-4 py-3">
+      <div className="mb-4 ps-3">
+        <h2>Dashboard Overview</h2>
+      </div>
       {/* Header */}
       <Row className="mb-4">
         <Col>
