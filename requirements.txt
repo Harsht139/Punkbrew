@@ -1,0 +1,57 @@
+# Core Data Pipeline Dependencies
+requests==2.31.0
+pandas==2.0.3
+numpy==1.24.3
+python-dotenv==1.0.0
+
+# Google Cloud Platform
+google-cloud-storage==2.10.0
+google-cloud-bigquery==3.11.4
+google-cloud-logging==3.8.0
+google-auth==2.23.3
+
+# Data Processing
+pyarrow==12.0.1
+fastparquet==0.8.3
+jsonschema==4.19.0
+
+# API and HTTP
+httpx==0.24.1
+aiohttp==3.8.5
+tenacity==8.2.3
+flask==2.3.3
+flask-cors==4.0.0
+
+# Database and ORM
+sqlalchemy>=1.4,<2.0
+alembic==1.12.0
+
+# Airflow (optional - for orchestration)
+apache-airflow==2.7.0
+apache-airflow-providers-google==10.8.0
+
+# Data Quality and Testing
+great-expectations==0.17.12
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-mock==3.11.1
+
+# Utilities
+pyyaml==6.0.1
+click==8.1.7
+rich==13.5.2
+loguru==0.7.0
+
+# Development Tools
+black==23.7.0
+flake8==6.0.0
+isort==5.12.0
+mypy==1.5.1
+
+# Jupyter (for data exploration)
+jupyter==1.0.0
+jupyterlab==4.0.5
+
+# Data Build Tool (dbt)
+dbt-core==1.6.0
+dbt-bigquery==1.6.0

@@ -1,0 +1,13 @@
+{
+  "data": {
+    "server": "development",
+    "backend": "flask_api",
+    "frontend": "react_dev",
+    "architecture": "option_2",
+    "status": "healthy",
+    "timestamp": "2025-09-10T21:17:50.223319"
+  },
+  "cached_at": "2025-09-10T21:17:50.223396",
+  "cache_key": "system_status",
+  "ttl_seconds": 300
+}

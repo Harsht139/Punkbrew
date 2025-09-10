@@ -1,0 +1,55 @@
+# Punk Brewery Data Pipeline Configuration
+
+# API Configuration
+api:
+  primary_url: "https://api.punkapi.com/v2"
+  fallback_apis:
+    - url: "https://api.openbrewerydb.org/v1"
+      type: "openbrewery"
+      enabled: true
+    - url: "https://api.brewerydb.com/v2"
+      type: "brewerydb"
+      enabled: false  # Requires API key
+  timeout: 30
+  retry_attempts: 3
+  rate_limit_delay: 1.0
+  fallback_enabled: true
+
+# Google Cloud Platform Configuration
+gcp:
+  project_id: "punkbrew"
+  storage_bucket: "punkbrew-data-staging-bucket"
+  bigquery_dataset: "punkbrew_warehouse"
+  location: "US-CENTRAL1"
+  credentials_path: null  # Set via GOOGLE_APPLICATION_CREDENTIALS env var
+
+# Pipeline Configuration
+pipeline:
+  batch_size: 100
+  max_workers: 4
+  staging_path: "staging/beers"
+  data_retention_days: 30
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  use_rich: true
+  use_gcp_logging: false
+  log_file: "logs/pipeline.log"
+
+# Data Quality Configuration
+data_quality:
+  required_fields:
+    - "beer_id"
+    - "name"
+    - "category"
+  validation_rules:
+    abv_min: 0.0
+    abv_max: 20.0
+    ibu_min: 0.0
+    ibu_max: 200.0
+
+# Dashboard Configuration
+dashboard:
+  refresh_schedule: "0 6 * * *"  # Daily at 6 AM
+  data_freshness_hours: 24

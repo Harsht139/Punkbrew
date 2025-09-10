@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  punk-brewery-pipeline:
+    build: .
+    container_name: punk-brewery-pipeline
+    environment:
+      - PUNK_API_BASE_URL=https://api.punkapi.com/v2
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_STORAGE_BUCKET=${GCP_STORAGE_BUCKET}
+      - GCP_BIGQUERY_DATASET=${GCP_BIGQUERY_DATASET}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
+    volumes:
+      - ./logs:/app/logs
+      - ./credentials:/app/credentials:ro
+      - ./config:/app/config:ro
+    networks:
+      - punk-brewery-network
+    restart: unless-stopped
+
+  # Optional: Add monitoring services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - punk-brewery-network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - punk-brewery-network
+    profiles:
+      - monitoring
+
+networks:
+  punk-brewery-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:

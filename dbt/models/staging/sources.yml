@@ -1,0 +1,54 @@
+version: 2
+
+sources:
+  - name: punk_brewery
+    description: Raw data from Punk Brewery API loaded into BigQuery
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: punk_brewery_dw
+    
+    tables:
+      - name: staging_beers
+        description: Raw beer data from Punk API
+        columns:
+          - name: beer_id
+            description: Unique identifier for each beer
+            tests:
+              - unique
+              - not_null
+          
+          - name: name
+            description: Name of the beer
+            tests:
+              - not_null
+          
+          - name: category
+            description: Beer category (ale, lager, other)
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['ale', 'lager', 'other']
+          
+          - name: abv
+            description: Alcohol by volume percentage
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+                  max_value: 20
+          
+          - name: ibu
+            description: International Bitterness Units
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+                  max_value: 200
+          
+          - name: processed_at
+            description: Timestamp when the record was processed
+            tests:
+              - not_null
+
+      - name: dim_beers
+        description: Dimension table for beer information
+        
+      - name: fact_beers
+        description: Fact table for beer metrics

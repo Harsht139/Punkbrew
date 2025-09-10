@@ -1,0 +1,70 @@
+# dbt Project Configuration for Punk Brewery Data Warehouse
+
+name: 'punk_brewery_dw'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'punk_brewery'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Configuring models
+models:
+  punk_brewery_dw:
+    # Staging models - materialized as views
+    staging:
+      +materialized: view
+      +schema: staging
+    
+    # Intermediate models - materialized as views
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    
+    # Marts models - materialized as tables
+    marts:
+      +materialized: table
+      +schema: marts
+      core:
+        +materialized: table
+        +pre-hook: "{{ logging.log_model_start_event() }}"
+        +post-hook: "{{ logging.log_model_end_event() }}"
+
+# Seeds configuration
+seeds:
+  punk_brewery_dw:
+    +schema: seeds
+
+# Snapshots configuration
+snapshots:
+  punk_brewery_dw:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: updated_at
+
+# Variables
+vars:
+  # Date range for incremental models
+  start_date: '2010-01-01'
+  
+  # Data quality thresholds
+  min_records_per_day: 10
+  max_null_percentage: 0.05
+  
+  # Business logic parameters
+  min_abv: 0.0
+  max_abv: 20.0
+  min_ibu: 0.0
+  max_ibu: 200.0
