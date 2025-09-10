@@ -1,10 +1,13 @@
-import React from 'react';
-import { Navbar, Nav, Container, Badge } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
+import { FaBeer, FaSearch, FaMapMarkerAlt, FaDatabase, FaCog } from 'react-icons/fa';
 import './Navigation.css';
 
 function Navigation() {
   const location = useLocation();
+  const [expanded, setExpanded] = useState(false);
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -12,65 +15,39 @@ function Navigation() {
 
   return (
     <Navbar 
-      className="modern-navbar" 
+      className="modern-navbar px-0" 
       variant="dark" 
       expand="lg" 
       sticky="top"
+      expanded={expanded}
     >
-      <Container fluid>
-        <Navbar.Brand as={Link} to="/" className="brand-logo ps-2">
-          <i className="fas fa-beer brand-icon me-2"></i>
+      <Container fluid className="px-0">
+        <Navbar.Brand as={Link} to="/" className="brand-logo ms-3">
+          <FaBeer className="brand-icon me-2" />
           <span className="brand-text">Beer Recipe Intelligence</span>
         </Navbar.Brand>
         
-        <Navbar.Toggle aria-controls="navbar-nav" className="border-0" />
+        <Navbar.Toggle aria-controls="navbar-nav" className="border-0 me-3" onClick={() => setExpanded(expanded ? false : true)} />
         
         <Navbar.Collapse id="navbar-nav">
-          {/* Main Navigation */}
-          <Nav className="me-auto nav-links">
+          <Nav className="w-100 d-flex justify-content-between">
             <Nav.Link 
               as={Link} 
               to="/" 
               className={`nav-item ${isActive('/') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
             >
-              <i className="fas fa-home nav-icon"></i>
+              <FaCog className="me-1" />
               <span className="nav-text">Dashboard</span>
-            </Nav.Link>
-            
-            <Nav.Link 
-              as={Link} 
-              to="/analytics" 
-              className={`nav-item ps-4 ${isActive('/analytics') ? 'active' : ''}`}
-            >
-              <i className="fas fa-chart-line nav-icon me-3"></i>
-              <span className="nav-text">Analytics</span>
-            </Nav.Link>
-            
-            <Nav.Link 
-              as={Link} 
-              to="/enhanced-analytics" 
-              className={`nav-item ${isActive('/enhanced-analytics') ? 'active' : ''}`}
-            >
-              <i className="fas fa-chart-pie nav-icon"></i>
-              <span className="nav-text">Enhanced Analytics</span>
-              <Badge bg="warning" className="ms-1">New</Badge>
-            </Nav.Link>
-            
-            <Nav.Link 
-              as={Link} 
-              to="/looker" 
-              className={`nav-item ${isActive('/looker') ? 'active' : ''}`}
-            >
-              <i className="fas fa-chart-pie nav-icon"></i>
-              <span className="nav-text">Looker Studio</span>
             </Nav.Link>
             
             <Nav.Link 
               as={Link} 
               to="/search" 
               className={`nav-item ${isActive('/search') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
             >
-              <i className="fas fa-search nav-icon"></i>
+              <FaSearch className="me-1" />
               <span className="nav-text">Search</span>
             </Nav.Link>
             
@@ -78,31 +55,40 @@ function Navigation() {
               as={Link} 
               to="/geographic" 
               className={`nav-item ${isActive('/geographic') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
             >
-              <i className="fas fa-globe nav-icon"></i>
-              <span className="nav-text">Geographic</span>
+              <FaMapMarkerAlt className="me-1" />
+              <span className="nav-text">Locations</span>
+            </Nav.Link>
+            
+            <Nav.Link 
+              as={Link} 
+              to="/analytics" 
+              className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
+            >
+              <FaDatabase className="me-1" />
+              <span className="nav-text">Enhanced Analytics</span>
+            </Nav.Link>
+            
+            <Nav.Link 
+              as={Link} 
+              to="/looker" 
+              className={`nav-item ${isActive('/looker') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
+            >
+              <FaDatabase className="me-1" />
+              <span className="nav-text">Looker Studio</span>
             </Nav.Link>
             
             <Nav.Link 
               as={Link} 
               to="/pipeline" 
               className={`nav-item ${isActive('/pipeline') ? 'active' : ''}`}
+              onClick={() => setExpanded(false)}
             >
-              <i className="fas fa-cogs nav-icon"></i>
+              <FaCog className="me-1" />
               <span className="nav-text">Pipeline</span>
-            </Nav.Link>
-          </Nav>
-          
-          {/* Right Side Actions */}
-          <Nav className="navbar-actions">
-            <Nav.Link className="action-item notification-item">
-              <i className="fas fa-bell"></i>
-              <Badge bg="danger" className="notification-badge">3</Badge>
-            </Nav.Link>
-            
-            <Nav.Link className="action-item profile-item">
-              <i className="fas fa-user-circle"></i>
-              <span className="profile-text">Profile</span>
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

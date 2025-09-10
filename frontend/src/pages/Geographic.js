@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Badge, Spinner, Table, ListGroup } from 'react-bootstrap';
+import { 
+  Container, 
+  Row, 
+  Col, 
+  Card, 
+  Form, 
+  Button, 
+  Alert, 
+  Badge, 
+  Spinner, 
+  Table, 
+  ListGroup 
+} from 'react-bootstrap';
 import { searchGeographic } from '../services/api';
 
 function Geographic() {
   const [filters, setFilters] = useState({
     city: '',
     state: '',
-    country: 'United States',
+    country: 'US',
     brewery_type: ''
   });
   const [results, setResults] = useState(null);
@@ -42,275 +54,219 @@ function Geographic() {
 
     setLoading(true);
     setError('');
-    setResults(null);
+    setResults([]);
     
     try {
       const startTime = Date.now();
+      const response = await searchGeographic(filters);
       
-      // Clean filters (remove empty values)
-      const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value.trim() !== '')
-      );
+      // response.data should now be the breweries array
+      const breweries = Array.isArray(response.data) ? response.data : [];
       
-      const data = await searchGeographic(cleanFilters);
-      
+      setResults(breweries);
       setSearchStats({
         method: 'Geographic Search',
-        description: 'Location-based brewery discovery',
+        description: 'Search by location and brewery type',
         responseTime: Date.now() - startTime,
-        filters: cleanFilters
+        backend: 'Python Service',
+        count: breweries.length
       });
       
-      setResults(data);
+      if (breweries.length === 0) {
+        setError('No breweries found matching your criteria. Try expanding your search.');
+      } else {
+        setError(''); // Clear any previous error if we have results
+      }
     } catch (err) {
-      setError(err.message);
+      console.error('Search error:', err);
+      setError('Failed to fetch breweries. Please check your connection and try again.');
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleQuickSearch = (location) => {
-    setFilters(prev => ({
-      ...prev,
+    setFilters({
+      ...filters,
       city: location.city,
-      state: location.state
-    }));
-  };
-
-  const renderSearchStats = () => {
-    if (!searchStats) return null;
-    
-    return (
-      <Alert variant="info" className="mb-3">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <strong>🌍 {searchStats.method}</strong>
-            <br />
-            <small>{searchStats.description}</small>
-          </div>
-          <div className="text-end">
-            <Badge bg="success">{searchStats.responseTime}ms</Badge>
-            <br />
-            <small className="text-muted">Python Backend</small>
-          </div>
-        </div>
-        <div className="mt-2">
-          <small><strong>Filters:</strong> {JSON.stringify(searchStats.filters)}</small>
-        </div>
-      </Alert>
-    );
-  };
-
-  const renderResults = () => {
-    if (!results) return null;
-
-    if (results.breweries && results.breweries.length === 0) {
-      return (
-        <Alert variant="warning">
-          <i className="fas fa-map-marker-alt"></i> No breweries found for the specified location filters.
-        </Alert>
-      );
-    }
-
-    const breweries = results.breweries || [];
-    const groupedByType = breweries.reduce((acc, brewery) => {
-      const type = brewery.brewery_type || 'unknown';
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(brewery);
-      return acc;
-    }, {});
-
-    return (
-      <>
-        <Card className="mb-4">
-          <Card.Header>
-            <h5>
-              <i className="fas fa-map-marker-alt"></i> Geographic Results 
-              <Badge bg="primary" className="ms-2">{breweries.length}</Badge>
-            </h5>
-          </Card.Header>
-          <Card.Body>
-            <Row>
-              <Col md={8}>
-                <div className="table-responsive">
-                  <Table striped hover size="sm">
-                    <thead>
-                      <tr>
-                        <th>Brewery</th>
-                        <th>Type</th>
-                        <th>Address</th>
-                        <th>Contact</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {breweries.slice(0, 20).map((brewery) => (
-                        <tr key={brewery.id}>
-                          <td>
-                            <strong>{brewery.name}</strong>
-                          </td>
-                          <td>
-                            <Badge bg="secondary" className="text-capitalize">
-                              {brewery.brewery_type}
-                            </Badge>
-                          </td>
-                          <td>
-                            <small>
-                              {brewery.address_1 && <>{brewery.address_1}<br /></>}
-                              {brewery.city}, {brewery.state} {brewery.postal_code}
-                            </small>
-                          </td>
-                          <td>
-                            <div className="d-flex gap-1">
-                              {brewery.phone && (
-                                <Badge bg="info" title="Phone">
-                                  <i className="fas fa-phone"></i>
-                                </Badge>
-                              )}
-                              {brewery.website_url && (
-                                <a href={brewery.website_url} target="_blank" rel="noopener noreferrer">
-                                  <Badge bg="success">
-                                    <i className="fas fa-external-link-alt"></i>
-                                  </Badge>
-                                </a>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              </Col>
-              <Col md={4}>
-                <Card>
-                  <Card.Header>
-                    <h6><i className="fas fa-chart-pie"></i> Brewery Types</h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <ListGroup variant="flush">
-                      {Object.entries(groupedByType).map(([type, typeBreweries]) => (
-                        <ListGroup.Item key={type} className="d-flex justify-content-between align-items-center">
-                          <span className="text-capitalize">{type}</span>
-                          <Badge bg="primary">{typeBreweries.length}</Badge>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      </>
-    );
+      state: location.state,
+      country: 'US'
+    });
   };
 
   return (
     <Container className="mt-4">
       <Row>
-        <Col>
-          <Card>
+        <Col md={4}>
+          <Card className="mb-4">
             <Card.Header>
-              <h4>
-                <i className="fas fa-globe"></i> Geographic Intelligence
-                <Badge bg="success" className="ms-2">Option 2: Python Backend</Badge>
-              </h4>
+              <h4>Location Search</h4>
             </Card.Header>
             <Card.Body>
-              <Alert variant="success">
-                <strong>🎯 Location-Based Discovery:</strong> Search breweries by geographic location using our Python backend API service.
-              </Alert>
-              
               <Form onSubmit={handleSearch}>
-                <Row className="mb-3">
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>City</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g., San Diego"
-                        value={filters.city}
-                        onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
-                        disabled={loading}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>State/Province</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="e.g., California"
-                        value={filters.state}
-                        onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
-                        disabled={loading}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>Country</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={filters.country}
-                        onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-                        disabled={loading}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={3}>
-                    <Form.Group>
-                      <Form.Label>Brewery Type</Form.Label>
-                      <Form.Select
-                        value={filters.brewery_type}
-                        onChange={(e) => setFilters(prev => ({ ...prev, brewery_type: e.target.value }))}
-                        disabled={loading}
-                      >
-                        {breweryTypes.map(type => (
-                          <option key={type.value} value={type.value}>{type.label}</option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? (
-                      <><Spinner size="sm" className="me-1" /> Searching...</>
-                    ) : (
-                      <><i className="fas fa-search"></i> Search Location</>
-                    )}
-                  </Button>
-                  
-                  <div>
-                    <small className="text-muted me-2">Quick searches:</small>
-                    {popularLocations.slice(0, 3).map((location, idx) => (
-                      <Button
-                        key={idx}
-                        variant="outline-secondary"
-                        size="sm"
-                        className="me-1"
-                        onClick={() => handleQuickSearch(location)}
-                        disabled={loading}
-                      >
-                        {location.city}
-                      </Button>
+                <Form.Group className="mb-3">
+                  <Form.Label>City</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="e.g., San Diego"
+                    value={filters.city}
+                    onChange={(e) => setFilters({...filters, city: e.target.value})}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>State/Province</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="e.g., California"
+                    value={filters.state}
+                    onChange={(e) => setFilters({...filters, state: e.target.value})}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={filters.country}
+                    onChange={(e) => setFilters({...filters, country: e.target.value})}
+                  >
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="DE">Germany</option>
+                    <option value="BE">Belgium</option>
+                    <option value="CA">Canada</option>
+                    <option value="">Other</option>
+                  </Form.Control>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Brewery Type</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={filters.brewery_type}
+                    onChange={(e) => setFilters({...filters, brewery_type: e.target.value})}
+                  >
+                    {breweryTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
                     ))}
-                  </div>
-                </div>
+                  </Form.Control>
+                </Form.Group>
+
+                <Button 
+                  variant="primary" 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-100"
+                >
+                  {loading ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    'Search Locations'
+                  )}
+                </Button>
               </Form>
 
-              {error && (
-                <Alert variant="danger">
-                  <i className="fas fa-exclamation-triangle"></i> {error}
-                </Alert>
-              )}
-
-              {renderSearchStats()}
-              {renderResults()}
+              <div className="mt-4">
+                <h5>Popular Locations</h5>
+                <ListGroup>
+                  {popularLocations.map((loc, index) => (
+                    <ListGroup.Item 
+                      key={index} 
+                      action 
+                      onClick={() => handleQuickSearch(loc)}
+                    >
+                      {loc.city}, {loc.state}
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </div>
             </Card.Body>
           </Card>
+        </Col>
+
+        <Col md={8}>
+          {error && <Alert variant="danger">{error}</Alert>}
+          
+          {loading && (
+            <div className="text-center my-5">
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+              <p className="mt-2">Searching breweries...</p>
+            </div>
+          )}
+
+          {searchStats && (
+            <Alert variant="info" className="mb-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{searchStats.method}</strong>
+                  <br />
+                  <small>{searchStats.description}</small>
+                </div>
+                <div>
+                  <Badge bg="success">{searchStats.responseTime}ms</Badge>
+                </div>
+              </div>
+              <div className="mt-2">
+                <small className="text-muted">
+                  {searchStats.count} results found • {searchStats.backend}
+                </small>
+              </div>
+            </Alert>
+          )}
+
+          {!loading && results && results.length > 0 && (
+            <div className="search-results">
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Website</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((brewery) => (
+                    <tr key={brewery.id}>
+                      <td>{brewery.name}</td>
+                      <td>
+                        <Badge bg="secondary">
+                          {brewery.brewery_type || 'N/A'}
+                        </Badge>
+                      </td>
+                      <td>
+                        {brewery.city}, {brewery.state || brewery.state_province} {brewery.country}
+                      </td>
+                      <td>
+                        {brewery.website_url ? (
+                          <a 
+                            href={brewery.website_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary"
+                          >
+                            Visit
+                          </a>
+                        ) : 'N/A'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          )}
+
+          {!loading && results && results.length === 0 && (
+            <Alert variant="info">
+              No breweries found matching your criteria. Try adjusting your filters.
+            </Alert>
+          )}
         </Col>
       </Row>
     </Container>

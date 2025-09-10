@@ -101,10 +101,22 @@ class EnhancedAPIService:
     def search_breweries(self, query: str, limit: int = 20) -> List[Dict]:
         """Search breweries by name."""
         params = {
-            'query': query,
+            'by_name': query,
             'per_page': min(limit, 50)
         }
-        return self._make_request('/search', params)
+        # The correct endpoint for searching breweries by name
+        results = self._make_request('', params)  # Empty string because we're using the base URL with params
+        
+        # Ensure we always return a list, even if the API returns None or an error
+        if results is None:
+            print("⚠️ API returned None, returning empty list")
+            return []
+            
+        if not isinstance(results, list):
+            print(f"⚠️ Unexpected API response format: {type(results)}")
+            return []
+            
+        return results
     
     def get_brewery_by_id(self, brewery_id: str) -> Dict:
         """Get single brewery by ID."""

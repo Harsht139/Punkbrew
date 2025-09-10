@@ -13,6 +13,7 @@ from integrated_brewery_platform import IntegratedBreweryPlatform
 from enhanced_api_service import api_service, search_breweries, get_random_brewery, search_by_location
 from local_cache_service import local_cache
 import json
+import requests
 from datetime import datetime
 
 # Initialize Flask app
@@ -150,21 +151,41 @@ def search_breweries_endpoint():
 def fast_search():
     """Fast brewery search using only Python backend API."""
     query = request.args.get('q', '').strip()
+    print(f"🔍 Fast search request for query: '{query}'")
+    
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
     try:
-        # Only use enhanced API service (faster)
+        # Use the enhanced API service with proper error handling
+        print("🔧 Calling search_breweries...")
         results = search_breweries(query, limit=50)
+        print(f"✅ Search complete. Found {len(results)} results")
         
+        # Ensure we always return a list, even if empty
+        if not isinstance(results, list):
+            print("⚠️ Warning: search_breweries did not return a list")
+            results = []
+            
         return jsonify({
-            'breweries': results,
-            'count': len(results),
-            'search_method': 'python_backend_only',
-            'timestamp': datetime.now().isoformat()
+            'data': {
+                'breweries': results,
+                'count': len(results),
+                'search_method': 'python_backend_only',
+                'timestamp': datetime.now().isoformat()
+            },
+            'status': 'success'
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = f"Error in fast_search: {str(e)}"
+        print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'error': error_msg,
+            'type': type(e).__name__,
+            'status': 'error'
+        }), 500
 
 @app.route('/api/autocomplete', methods=['GET'])
 def autocomplete():
@@ -218,54 +239,78 @@ def brewery_discovery():
 
 @app.route('/api/geographic', methods=['GET'])
 def geographic_search():
-    """Geographic brewery search and intelligence."""
-    filters = {}
+    """Geographic brewery search using Open Brewery DB API."""
+    city = request.args.get('city', '')
+    state = request.args.get('state', '')
+    country = request.args.get('country', '')
+    brewery_type = request.args.get('brewery_type', '')
+    postal_code = request.args.get('postal_code', '')
+    latitude = request.args.get('latitude', '')
+    longitude = request.args.get('longitude', '')
+    distance = request.args.get('distance', '')
+
+    # Map frontend parameters to Open Brewery DB parameters
+    params = {}
+    if city:
+        params['by_city'] = city
+    if state:
+        params['by_state'] = state
+    if country:
+        # Handle both 'US' and 'United States' as valid country parameters
+        if country.lower() == 'united states' or country.upper() == 'US':
+            params['by_country'] = 'United States'
+        else:
+            params['by_country'] = country
+    if brewery_type:
+        params['by_type'] = brewery_type
+    if postal_code:
+        params['by_postal'] = postal_code
+    if latitude and longitude:
+        params['by_dist'] = f"{latitude},{longitude}"
+        if distance:
+            params['per_page'] = 50  # Limit results for distance-based searches
     
-    # Extract location filters from query parameters
-    if request.args.get('city'):
-        filters['by_city'] = request.args.get('city')
-    if request.args.get('state'):
-        filters['by_state'] = request.args.get('state')
-    if request.args.get('country'):
-        filters['by_country'] = request.args.get('country')
-    if request.args.get('postal_code'):
-        filters['by_postal'] = request.args.get('postal_code')
-    if request.args.get('brewery_type'):
-        filters['by_type'] = request.args.get('brewery_type')
+    # Default to 50 results if not specified
+    if 'per_page' not in params:
+        params['per_page'] = 50
     
-    # Distance-based search
+    # Handle distance-based search
     if request.args.get('latitude') and request.args.get('longitude'):
         try:
             lat = float(request.args.get('latitude'))
             lng = float(request.args.get('longitude'))
             distance = int(request.args.get('distance', 25))
             
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            breweries = loop.run_until_complete(
-                platform.find_breweries_by_distance(lat, lng, distance)
-            )
-            loop.close()
+            # Use the by_dist parameter for distance-based search
+            params['by_dist'] = f"{lat},{lng}"
             
-            return jsonify({
-                'breweries': [brewery.__dict__ for brewery in breweries],
-                'search_center': {'latitude': lat, 'longitude': lng},
-                'search_radius_km': distance
-            })
         except ValueError:
             return jsonify({'error': 'Invalid coordinates'}), 400
     
-    # Location-based search
-    if filters:
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            results = loop.run_until_complete(platform.geographic_brewery_intelligence(**filters))
-            loop.close()
-            
-            return jsonify(results)
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+    # Make the API request to Open Brewery DB
+    try:
+        print(f"🔍 Making request to Open Brewery DB with params: {params}")
+        response = requests.get('https://api.openbrewerydb.org/v1/breweries', params=params)
+        response.raise_for_status()
+        
+        breweries = response.json()
+        print(f"✅ Found {len(breweries)} breweries")
+        
+        # Add metadata to the response
+        return jsonify({
+            'breweries': breweries,
+            'count': len(breweries),
+            'params': params,
+            'timestamp': datetime.now().isoformat()
+        })
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error fetching data from Open Brewery DB: {str(e)}"
+        print(f"❌ {error_message}")
+        return jsonify({'error': error_message}), 500
+    except Exception as e:
+        error_message = f"Unexpected error: {str(e)}"
+        print(f"❌ {error_message}")
+        return jsonify({'error': error_message}), 500
     
     return jsonify({'error': 'No search parameters provided'}), 400
 
@@ -340,16 +385,26 @@ def internal_error(error):
 # ==================== MAIN ====================
 
 if __name__ == '__main__':
+    import argparse
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Brewery Intelligence API Server')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on')
+    args = parser.parse_args()
+    
+    port = args.port
+    
     print("🚀 BREWERY INTELLIGENCE API SERVER")
     print("=" * 50)
-    print("🔗 API Endpoints:")
-    print("   • Health: http://localhost:5000/api/health")
-    print("   • Analytics: http://localhost:5000/api/analytics")
-    print("   • Search: http://localhost:5000/api/search?q=query")
-    print("   • Geographic: http://localhost:5000/api/geographic")
-    print("   • Discovery: http://localhost:5000/api/discovery")
-    print("   • Pipeline: http://localhost:5000/api/pipeline/status")
-    print("\n🌐 Starting server on http://localhost:5000")
+    print(f"🔗 API Endpoints:")
+    print(f"   • Health: http://localhost:{port}/api/health")
+    print(f"   • Analytics: http://localhost:{port}/api/analytics")
+    print(f"   • Search: http://localhost:{port}/api/search?q=query")
+    print(f"   • Geographic: http://localhost:{port}/api/geographic")
+    print(f"   • Discovery: http://localhost:{port}/api/discovery")
+    print(f"   • Pipeline: http://localhost:{port}/api/pipeline/status")
+    print(f"\n🌐 Starting server on http://localhost:{port}")
     print("📊 Ready for React frontend connection!")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Run the Flask app
+    app.run(host='0.0.0.0', port=port, debug=True)

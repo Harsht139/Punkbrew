@@ -44,17 +44,29 @@ export const getAnalyticsSummary = () => apiRequest('/api/analytics/summary');
 // ==================== SEARCH & DISCOVERY ====================
 // Search breweries (enhanced backend)
 export const searchBreweries = async (query, fast = false) => {
-  const endpoint = fast ? '/search/fast' : '/search';
-  const response = await fetch(`${API_BASE_URL}${endpoint}?q=${encodeURIComponent(query)}`);
-  if (!response.ok) {
-    throw new Error(`Search failed: ${response.statusText}`);
+  const endpoint = fast ? '/api/search/fast' : '/api/search';
+  const response = await apiRequest(`${endpoint}?q=${encodeURIComponent(query)}`);
+  
+  // Handle the response format from the backend
+  if (response.data) {
+    return response.data.breweries || [];
   }
-  return response.json();
+  
+  throw new Error(response.error || 'Search failed');
 };
 
 // Fast search (Python backend only)
 export const fastSearchBreweries = async (query) => {
-  return searchBreweries(query, true);
+  const response = await apiRequest(`/api/search/fast?q=${encodeURIComponent(query)}`);
+  
+  // Handle the response format from the backend
+  if (response.data && response.data.data) {
+    return response.data.data; // Return the data object with breweries, count, etc.
+  } else if (response.data && response.data.error) {
+    throw new Error(response.data.error);
+  } else {
+    throw new Error('Unexpected response format from server');
+  }
 };
 
 export const getAutocomplete = (query) => 
@@ -65,9 +77,22 @@ export const getBreweryDiscovery = () => apiRequest('/api/discovery');
 
 // ==================== GEOGRAPHIC ====================
 
-export const searchGeographic = (filters) => {
-  const params = new URLSearchParams(filters).toString();
-  return apiRequest(`/api/geographic?${params}`);
+export const searchGeographic = async (filters) => {
+  // Filter out empty values
+  const cleanFilters = Object.fromEntries(
+    Object.entries(filters).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+  );
+  
+  const params = new URLSearchParams(cleanFilters).toString();
+  const response = await apiRequest(`/api/geographic?${params}`);
+  
+  // The backend returns { breweries: [...], count: N, ... }
+  // Ensure we return the breweries array as data
+  if (response.data && Array.isArray(response.data.breweries)) {
+    return { data: response.data.breweries };
+  }
+  
+  return { data: [] };
 };
 
 export const searchByLocation = (city, state, country) => {

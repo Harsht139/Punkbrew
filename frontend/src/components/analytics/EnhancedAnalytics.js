@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Tabs, Tab, Spinner, Alert, Button, ButtonGroup } from 'react-bootstrap';
-import { getAnalyticsData } from '../../services/api';
+import { Container, Button, ButtonGroup, Spinner, Alert, Tabs, Tab } from 'react-bootstrap';
 
 // Import sub-components
 import SummaryCards from './sections/SummaryCards';
@@ -15,21 +14,27 @@ const EnhancedAnalytics = () => {
   const [timeRange, setTimeRange] = useState('year');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [data, setData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Uncomment when API is ready
-        // const response = await getAnalyticsData(timeRange);
-        // setData(response.data);
-        
-        // For now, set loading to false after a delay
-        setTimeout(() => setIsLoading(false), 1000);
+        setError(null);
+        // Simulate API call with timeout
+        await new Promise((resolve, reject) => {
+          setTimeout(() => {
+            // Simulate random error for demonstration
+            if (Math.random() > 0.8) {
+              reject(new Error('Failed to fetch data. Please try again.'));
+            } else {
+              resolve();
+            }
+          }, 1000);
+        });
       } catch (err) {
-        console.error('Error fetching analytics data:', err);
-        setError('Failed to load analytics data. Please try again later.');
+        console.error('Error fetching data:', err);
+        setError(err.message);
+      } finally {
         setIsLoading(false);
       }
     };
