@@ -20,6 +20,11 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.python-version
 
 # Virtual environments
 .env
@@ -29,6 +34,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.poetry/
+.pdm.toml
+.pdm-python
 
 # IDE
 .vscode/
@@ -36,16 +44,85 @@ venv.bak/
 *.swp
 *.swo
 *~
+.ropeproject
+.project
+.pydevproject
+.settings/
+.ropeproject/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytest_cache/
+.hypothesis/
+.eggs/
+.tox/
+.coverage
+.coverage.*
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
 # Logs
 logs/
 *.log
+airflow/logs/*.log
+airflow/logs/*/*.log
+airflow/logs/*/*/*.log
+airflow/logs/*/*/*/*.log
+airflow/airflow-*.log
+airflow/airflow-scheduler.log
+airflow/airflow-webserver.log
+airflow/airflow-worker.log
+airflow/webserver.pid
+airflow/airflow-webserver.pid
+airflow/airflow-scheduler.pid
+airflow/airflow-worker.pid
 
 # Data files
 data/
 *.csv
 # *.json  # Commented out to allow package.json and other config files
 *.parquet
+*.db
+*.sqlite3
+*.sqlite
+*.db-journal
+*.sqlite3-journal
+*.sqlite-journal
+*.dump
+*.rdb
+*.rdx
+*.so
+*.pyc
+*.pyd
+*.pyo
+*.pth
+*.egg
+*.egg-info/
+*.log
+*.pot
+*.py[co]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Credentials and secrets
 credentials/
