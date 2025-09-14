@@ -14,9 +14,11 @@ from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 import sys
 import os
 
-# Add src to path for imports
-sys.path.append('/opt/airflow/dags/src')
+# Add the dags directory to the Python path
+import os
+sys.path.append(os.path.dirname(__file__))
 
+# Now import from the src directory
 from src.main import PunkBreweryPipeline
 from src.utils.config_manager import ConfigManager
 

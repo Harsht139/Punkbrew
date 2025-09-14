@@ -12,8 +12,8 @@ from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 import pandas as pd
 
-from ..utils.config_manager import ConfigManager
-from ..utils.logger import get_pipeline_logger, log_function_call
+from src.utils.config_manager import ConfigManager
+from src.utils.logger import get_pipeline_logger, log_function_call
 
 
 @dataclass

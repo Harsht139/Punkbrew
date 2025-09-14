@@ -13,8 +13,8 @@ from google.cloud import storage
 from google.cloud.exceptions import NotFound
 import pandas as pd
 
-from ..utils.config_manager import ConfigManager
-from ..utils.logger import get_pipeline_logger, log_function_call
+from src.utils.config_manager import ConfigManager
+from src.utils.logger import get_pipeline_logger, log_function_call
 
 
 class BigQueryLoader:
